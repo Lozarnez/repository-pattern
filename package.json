@@ -4,6 +4,7 @@
   "description": "Collection of APIs services for E-Commerce proyect",
   "main": "index.js",
   "scripts": {
+    "prepare": "husky",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js",
     "lint": "eslint .",
@@ -33,6 +34,8 @@
     "winston-mongodb": "^5.1.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "@eslint/js": "^9.4.0",
     "eslint": "^9.4.0",
     "eslint-config-prettier": "^9.1.0",
@@ -41,6 +44,8 @@
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-sort-requires": "^2.1.0",
     "globals": "^15.4.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.5",
     "nodemon": "^3.1.3",
     "prettier": "^3.3.1"
   }
