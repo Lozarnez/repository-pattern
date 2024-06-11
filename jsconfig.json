@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@lib": ["app/shared/lib/index.js"],
+      "@schema/*": ["app/shared/schema/*"],
+      "@controller/*": ["app/controller/*"],
+      "@middleware": ["app/middleware/index.js"],
+      "@repository/*": ["app/shared/repository/*"],
+      "@db/connection": ["app/shared/db/connection/index.js"]
+    }
+  },
+  "include": ["src/**/*.js"],
+  "exclude": ["node_modules"]
+}
