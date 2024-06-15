@@ -28,8 +28,8 @@ function runServer() {
   const port = process.env.PORT || 3000;
   app.listen(port, async () => {
     try {
-      await MongoConnection('mongodb');
       await MySQLConnection('mysql');
+      await MongoConnection('mongodb');
       systemLogger.info(`Server running on port ${port}`);
     } catch (error) {
       systemLogger.error('Error starting server:', error);
