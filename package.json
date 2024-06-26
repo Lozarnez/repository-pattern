@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
-    "test": "jest --detectOpenHandles --forceExit",
-    "test:name": "jest --detectOpenHandles --forceExit --testNamePattern",
+    "test": "jest --watch --detectOpenHandles --forceExit",
+    "test:path": "jest --detectOpenHandles --forceExit --testPathPattern",
     "dev": "nodemon index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -16,7 +16,7 @@
   "license": "MIT",
   "_moduleAliases": {
     "@root": ".",
-    "@schema": "./src/app/shared/schema",
+    "@schema": "./src/app/shared/schema/index.js",
     "@lib": "./src/app/shared/lib/index.js",
     "@controller": "./src/app/controller",
     "@service": "./src/app/shared/service",
