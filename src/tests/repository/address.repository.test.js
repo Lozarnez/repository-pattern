@@ -14,10 +14,31 @@ afterAll(async () => {
   await closeDBLogger();
 });
 
+let addressId;
+
 describe('Address Repository', () => {
+  describe('createAddress', () => {
+    it('should create a new row in Address table', async () => {
+      const address = {
+        instanceId: 1,
+        locationCode: '000101009',
+        stateCode: '25',
+        municipalityCode: '01825',
+        zip: '12345',
+        street: 'Main St',
+        exteriorNumber: '123',
+        interiorNumber: 'A',
+        status: 1,
+        // lat: '19.123456',
+      };
+      const newAddress = await AddressRepository.create(address);
+      addressId = newAddress;
+      expect(newAddress).toEqual(expect.any(Number));
+    });
+  });
   describe('findAddress', () => {
     it('should return a list of addresses', async () => {
-      const query = { status: 1 };
+      const query = { id: addressId, status: 1 };
       const projection = { id: 1, zip: 1, street: 1 };
       const options = { page: 1, limit: 10 };
       const address = await AddressRepository.find(query, projection, options);
@@ -37,22 +58,22 @@ describe('Address Repository', () => {
       );
     });
   });
-  describe('createAddress', () => {
-    it('should create a new address', async () => {
+  describe('updateAddress', () => {
+    it('should update an address', async () => {
+      const query = { id: addressId };
       const address = {
-        instanceId: 1,
-        locationCode: '000101009',
-        stateCode: '25',
-        municipalityCode: '01825',
-        zip: '12345',
-        street: 'Main St',
-        exteriorNumber: '123',
-        interiorNumber: 'A',
-        status: 1,
-        // lat: '19.123456',
+        status: 2,
+        zip: '80127',
       };
-      const newAddress = await AddressRepository.create(address);
-      expect(newAddress).toEqual(expect.any(Number));
+      const updatedAddress = await AddressRepository.update(query, address);
+      expect(updatedAddress).toEqual(true);
+    });
+  });
+  describe('deleteAddress', () => {
+    it('should delete an address', async () => {
+      const query = { id: addressId };
+      const deletedAddress = await AddressRepository.delete(query);
+      expect(deletedAddress).toEqual(true);
     });
   });
 });
