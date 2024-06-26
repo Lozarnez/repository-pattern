@@ -29,5 +29,12 @@ const getConnection = (name) => {
   return connection.connection;
 };
 
+const closeConnection = async (name) => {
+  const connection = connections.find((conn) => conn.name === name);
+  await connection.connection.end();
+  systemLogger.info(`Closed MySQL connection: ${name}`);
+};
+
 module.exports = connectToMySQL;
 module.exports.getConnection = getConnection;
+module.exports.closeConnection = closeConnection;

@@ -25,6 +25,10 @@ const DBLogger = winston.createLogger({
   transports: [new winston.transports.MongoDB(DBLoggerOptions)],
 });
 
+const closeDBLogger = () => {
+  DBLogger.transports[0].close();
+};
+
 const loggerDb = async ({
   messageString = '',
   additionalInfo = { error: null, request: null },
@@ -55,4 +59,4 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-module.exports = { systemLogger, loggerDb, logger };
+module.exports = { systemLogger, loggerDb, logger, closeDBLogger };
