@@ -1,4 +1,6 @@
-const { getConnection } = require('../../db/connection/mysql.conn');
+const schemaValidator = require('../../resource/schemaValidator');
+const { getMySQLConnection } = require('@db/connection');
+const { vAddress, AddressSchema } = require('@schema');
 
 class MysqlBaseRepository {
   #connectionName;
@@ -12,12 +14,45 @@ class MysqlBaseRepository {
 
   async #_getConnection() {
     if (!this.#connection) {
-      this.#connection = await getConnection(this.#connectionName);
+      this.#connection = await getMySQLConnection(this.#connectionName);
       if (!this.#connection) {
         throw new Error(`Connection ${this.#connectionName} not found`);
       }
     }
     return this.#connection;
+  }
+
+  /**
+   * Method to create data in the database
+   * @param {object} data - Data to be inserted in the database
+   * @returns {Promise<number>} - Returns the id of the inserted data
+   */
+  async create(data) {
+    const [isValid, errors] = schemaValidator(vAddress, data);
+    if (!isValid) {
+      return errors;
+    }
+
+    const requiredFields = Object.keys(AddressSchema.properties).filter((key) =>
+      AddressSchema.required.includes(key),
+    );
+    const optionalFields = Object.keys(AddressSchema.properties).filter(
+      (key) => !AddressSchema.required.includes(key),
+    );
+
+    const fields = [
+      ...requiredFields,
+      ...optionalFields.filter((key) => key in data),
+    ];
+    const values = fields.map((field) => data[field]);
+
+    const placeholders = fields.map(() => '?').join(', ');
+    const columns = fields.join(', ');
+    const query = `INSERT INTO ${this.#tableName} (${columns}) VALUES (${placeholders})`;
+
+    const connection = await this.#_getConnection();
+    const [result] = await connection.query(query, values);
+    return result.insertId;
   }
 
   /**
@@ -66,9 +101,13 @@ class MysqlBaseRepository {
 
   /**
    *
-   * @param {} query
-   * @param {*} projection
-   * @returns
+   * @param {object} query - Query object to filter the data
+   * @param {object} projection - Projection object to select the fields
+   * @returns {Promise<object>} - Returns the data from the database
+   * @example
+   * const query = { id: 1 };
+   * const projection = { id: 1, zip: 1, street: 1 };
+   * const address = await AddressRepository.findOne(query, projection);
    */
   async findOne(query, projection = {}) {
     const connection = await this.#_getConnection();
@@ -101,15 +140,6 @@ class MysqlBaseRepository {
       { id },
     );
     return result[0];
-  }
-
-  async create(data) {
-    const connection = await this.#_getConnection();
-    const result = await connection.query(
-      `INSERT INTO ${this.#tableName} SET ?`,
-      data,
-    );
-    return result;
   }
 
   async update(id, data) {
