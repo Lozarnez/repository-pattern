@@ -6,7 +6,7 @@
     "paths": {
       "@/*": ["*"],
       "@lib": ["app/shared/lib/index.js"],
-      "@schema/*": ["app/shared/schema/*"],
+      "@schema": ["app/shared/schema/index.js"],
       "@controller/*": ["app/controller/*"],
       "@middleware": ["app/middleware/index.js"],
       "@repository/*": ["app/shared/repository/*"],
