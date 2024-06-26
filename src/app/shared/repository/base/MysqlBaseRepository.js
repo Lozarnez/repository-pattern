@@ -1,6 +1,6 @@
 const schemaValidator = require('../../resource/schemaValidator');
+const { AddressSchema } = require('@schema');
 const { getMySQLConnection } = require('@db/connection');
-const { vAddress, AddressSchema } = require('@schema');
 
 class MysqlBaseRepository {
   #connectionName;
@@ -28,16 +28,16 @@ class MysqlBaseRepository {
    * @returns {Promise<number>} - Returns the id of the inserted data
    */
   async create(data) {
-    const [isValid, errors] = schemaValidator(vAddress, data);
+    const [isValid, errors] = schemaValidator(AddressSchema.validate, data);
     if (!isValid) {
       return errors;
     }
 
-    const requiredFields = Object.keys(AddressSchema.properties).filter((key) =>
-      AddressSchema.required.includes(key),
+    const requiredFields = Object.keys(AddressSchema.schema.properties).filter(
+      (key) => AddressSchema.schema.required.includes(key),
     );
-    const optionalFields = Object.keys(AddressSchema.properties).filter(
-      (key) => !AddressSchema.required.includes(key),
+    const optionalFields = Object.keys(AddressSchema.schema.properties).filter(
+      (key) => !AddressSchema.schema.required.includes(key),
     );
 
     const fields = [
@@ -100,6 +100,62 @@ class MysqlBaseRepository {
   }
 
   /**
+   * Method to update data in the database
+   * @param {object} query - Query object to filter the data
+   * @param {object} data - Data to be updated in the database
+   * @returns {Promise<boolean>} - Returns true if the data is updated
+   */
+  async update(query, data) {
+    const [isValid, errors] = schemaValidator(
+      AddressSchema.partialSchema,
+      data,
+    );
+    if (!isValid) {
+      return errors;
+    }
+
+    const setFields = Object.keys(data);
+    const setValues = setFields.map((field) => data[field]);
+    const setClause = setFields.map((field) => `${field} = ?`).join(', ');
+    const whereFields = Object.keys(query);
+    const whereValues = whereFields.map((field) => query[field]);
+    const whereClause = whereFields
+      .map((field) => `${field} = ?`)
+      .join(' AND ');
+
+    const queryString = `UPDATE ${this.#tableName} SET ${setClause} WHERE ${whereClause}`;
+
+    const connection = await this.#_getConnection();
+    const [result] = await connection.query(queryString, [
+      ...setValues,
+      ...whereValues,
+    ]);
+
+    return result.changedRows > 0;
+  }
+
+  /**
+   * Method to delete data from the database
+   * @param {object} query - Query object to filter the data
+   * @returns {Promise<boolean>} - Returns true if the data is deleted
+   */
+  async delete(query) {
+    const whereFields = Object.keys(query);
+    const whereValues = whereFields.map((field) => query[field]);
+
+    const whereClause = whereFields
+      .map((field) => `${field} = ?`)
+      .join(' AND ');
+
+    const queryString = `DELETE FROM ${this.#tableName} WHERE ${whereClause}`;
+
+    const connection = await this.#_getConnection();
+    const [result] = await connection.execute(queryString, whereValues);
+
+    return result.affectedRows > 0;
+  }
+
+  /**
    *
    * @param {object} query - Query object to filter the data
    * @param {object} projection - Projection object to select the fields
@@ -140,24 +196,6 @@ class MysqlBaseRepository {
       { id },
     );
     return result[0];
-  }
-
-  async update(id, data) {
-    const connection = await this.#_getConnection();
-    const result = await connection.query(
-      `UPDATE ${this.#tableName} SET ? WHERE ?`,
-      [data, { id }],
-    );
-    return result;
-  }
-
-  async delete(id) {
-    const connection = await this.#_getConnection();
-    const result = await connection.query(
-      `DELETE FROM ${this.#tableName} WHERE ?`,
-      { id },
-    );
-    return result;
   }
 
   async findWithJoin(joins, query = {}, projection = {}, options = {}) {
