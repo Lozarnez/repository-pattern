@@ -1,3 +1,4 @@
+const ajv = require('./ajv.middleware');
 const errorHandler = require('./errors/handler.middleware');
 const errorLogger = require('./errors/logger.middleware');
 const errorRoute = require('./errors/invalidRoute.middleware');
@@ -10,4 +11,5 @@ module.exports = {
   errorRoute,
   responseHandler,
   schemaValidator,
+  ajv,
 };

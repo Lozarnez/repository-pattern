@@ -4,4 +4,5 @@ const MySQLConnection = require('./mysql.conn');
 module.exports = {
   MongoConnection,
   MySQLConnection,
+  closeMySQLConnection: MySQLConnection.closeConnection,
 };

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 const { getConnection } = require('../../db/connection/mysql.conn');
 
 class MysqlBaseRepository {
@@ -21,35 +20,78 @@ class MysqlBaseRepository {
     return this.#connection;
   }
 
-  async findAll() {
-    const connection = await this.#_getConnection();
-    const result = await connection.query(`SELECT * FROM ${this.#tableName}`);
-    return result;
-  }
-
+  /**
+   * Method to find data from the database
+   * @param {object} query - Query object to filter the data
+   * @param {object} projection - Projection object to select the fields
+   * @param {object} options - Options object to paginate the data
+   * @param {number} options.page - Page number to fetch the data
+   * @param {number} options.limit - Limit to fetch the data
+   * @returns {Promise<object>} - Returns the data from the database
+   * @example
+   * const query = { status: 1 };
+   * const projection = { id: 1, zip: 1, street: 1 };
+   * const options = { page: 2, limit: 5 };
+   * const address = await AddressRepository.find(query, projection, options);
+   */
   async find(query, projection = {}, options = {}) {
     options.page = Number(options.page) || 1;
     options.limit = Number(options.limit) || 10;
     options.skip = options.page ? (options.page - 1) * options.limit : 0;
 
     const connection = await this.#_getConnection();
-    const result = await connection.query(
-      `SELECT * FROM ${this.#tableName} WHERE ?`,
-      query,
+    const selectClause = Object.keys(projection).length
+      ? Object.keys(projection).join(', ')
+      : '*';
+    const whereClause = Object.keys(query)
+      .map((key) => `${key} = ?`)
+      .join(' AND ');
+    const whereValues = Object.values(query);
+
+    const [rows] = await connection.query(
+      `SELECT ${selectClause} FROM ${this.#tableName} WHERE ${whereClause} LIMIT ? OFFSET ?`,
+      [...whereValues, options.limit, options.skip],
     );
-    const count = result.length;
+
+    const [countResult] = await connection.query(
+      `SELECT COUNT(*) as count FROM ${this.#tableName} WHERE ${whereClause}`,
+      whereValues,
+    );
+
+    const count = countResult[0].count;
     const totalPages = Math.ceil(count / options.limit);
 
-    return { count, totalPages, result };
+    return { count, totalPages, result: rows };
   }
 
+  /**
+   *
+   * @param {} query
+   * @param {*} projection
+   * @returns
+   */
   async findOne(query, projection = {}) {
     const connection = await this.#_getConnection();
-    const result = await connection.query(
-      `SELECT * FROM ${this.#tableName} WHERE ?`,
-      query,
+    const selectClause = Object.keys(projection).length
+      ? Object.keys(projection).join(', ')
+      : '*';
+    const whereClause = Object.keys(query)
+      .map((key) => `${key} = ?`)
+      .join(' AND ');
+    const whereValues = Object.values(query);
+
+    const [rows] = await connection.query(
+      `SELECT ${selectClause} FROM ${this.#tableName} WHERE ${whereClause} LIMIT 1`,
+      whereValues,
     );
-    return result[0];
+
+    return rows.length ? rows[0] : null;
+  }
+
+  async findAll() {
+    const connection = await this.#_getConnection();
+    const result = await connection.query(`SELECT * FROM ${this.#tableName}`);
+    return result;
   }
 
   async findById(id) {

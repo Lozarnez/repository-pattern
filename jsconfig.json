@@ -10,6 +10,7 @@
       "@controller/*": ["app/controller/*"],
       "@middleware": ["app/middleware/index.js"],
       "@repository/*": ["app/shared/repository/*"],
+      "@service/*": ["app/shared/service/*"],
       "@db/connection": ["app/shared/db/connection/index.js"]
     }
   },
